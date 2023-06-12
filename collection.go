@@ -12,6 +12,7 @@ type CollectionInterface interface {
 	InsertOne(ctx context.Context, document interface{}, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 	UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) *mongo.SingleResult
+	Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error)
 }
 
 type CollectionHelper struct {
@@ -36,4 +37,9 @@ func (col CollectionHelper) UpdateOne(ctx context.Context, filter interface{}, u
 func (col CollectionHelper) FindOne(ctx context.Context, filter interface{},
 	opts ...*options.FindOneOptions) *mongo.SingleResult {
 	return col.collection.FindOne(ctx, filter, opts...)
+}
+
+func (col CollectionHelper) Find(ctx context.Context, filter interface{},
+	opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
+	return col.collection.Find(ctx, filter, opts...)
 }

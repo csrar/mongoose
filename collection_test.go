@@ -107,7 +107,6 @@ func Test_CollectionHelper_UpdateOne(t *testing.T) {
 func Test_CollectionHelper_FindOne(t *testing.T) {
 	type inParams struct {
 		ctxTimeout time.Duration
-		document   interface{}
 		documentID string
 	}
 	tests := []struct {
@@ -126,7 +125,6 @@ func Test_CollectionHelper_FindOne(t *testing.T) {
 			databaseName:   "mock-database",
 			inParams: inParams{
 				ctxTimeout: time.Second * 1,
-				document:   bson.M{"$set": bson.M{"mock": "document"}},
 				documentID: "111111111111111111111111",
 			},
 		},
@@ -144,6 +142,49 @@ func Test_CollectionHelper_FindOne(t *testing.T) {
 			assert.Error(t, got.Err())
 		} else {
 			assert.Nil(t, got.Err())
+		}
+	}
+}
+
+func Test_CollectionHelper_Find(t *testing.T) {
+	type inParams struct {
+		ctxTimeout time.Duration
+		documentID string
+	}
+	tests := []struct {
+		name           string
+		expectedErr    bool
+		mongoHost      string
+		collectionName string
+		databaseName   string
+		inParams       inParams
+	}{
+		{
+			name:           "Test find one with error due timeout connection",
+			expectedErr:    true,
+			mongoHost:      "mongodb://mock-string",
+			collectionName: "mock-collection",
+			databaseName:   "mock-database",
+			inParams: inParams{
+				ctxTimeout: time.Second * 1,
+				documentID: "111111111111111111111111",
+			},
+		},
+	}
+	for _, tt := range tests {
+		ctx, cancel := context.WithTimeout(context.Background(), tt.inParams.ctxTimeout)
+		defer cancel()
+		conn, _ := NewConnection(ctx, tt.mongoHost)
+		db := NewDatabase(tt.databaseName, conn)
+		collection := NewCollection(tt.collectionName, db)
+		docID, err := primitive.ObjectIDFromHex(tt.inParams.documentID)
+		assert.Nil(t, err)
+		got, err := collection.Find(ctx, bson.M{"_id": bson.M{"$eq": docID}})
+		if tt.expectedErr {
+			assert.Error(t, err)
+		} else {
+			assert.Nil(t, err)
+			assert.NotNil(t, got)
 		}
 	}
 }
