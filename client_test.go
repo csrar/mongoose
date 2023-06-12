@@ -3,6 +3,7 @@ package mongoose
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -49,15 +50,19 @@ func Test_ClientHelper_Ping(t *testing.T) {
 		name        string
 		hostname    string
 		expectedErr bool
+		timeout     time.Duration
 	}{
 		{
 			name:        "Test ping with invalid host",
 			hostname:    "mongodb://mock-string",
 			expectedErr: true,
+			timeout:     time.Second * 1,
 		},
 	}
 	for _, tt := range tests {
-		conn, _ := NewConnection(context.Background(), tt.hostname)
+		ctx, cancel := context.WithTimeout(context.Background(), tt.timeout)
+		defer cancel()
+		conn, _ := NewConnection(ctx, tt.hostname)
 		got := conn.Ping(context.Background())
 		if tt.expectedErr {
 			assert.Error(t, got)
